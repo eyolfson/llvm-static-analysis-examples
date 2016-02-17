@@ -12,8 +12,7 @@ using namespace llvm;
 
 namespace {
 
-class AssignSetsVisitor : public InstVisitor<AssignSetsVisitor> {
-
+class GenKillVisitor : public InstVisitor<GenKillVisitor> {
   DenseMap<Instruction *, SetVector<Value *>> GenSets;
   DenseMap<Instruction *, SetVector<Value *>> KillSets;
 
@@ -154,14 +153,14 @@ public:
 
 class LiveVariablesAnalysis : public FunctionPass {
   Function *CurrentFunction;
-  AssignSetsVisitor Visitor;
+  GenKillVisitor Visitor;
+  DenseMap<BasicBlock *, SetVector<Value *>> InSets;
+  DenseMap<Instruction *, SetVector<Value *>> OutSets;
 
 public:
   static char ID;
   LiveVariablesAnalysis() : FunctionPass(ID) {}
 
-  DenseMap<BasicBlock *, SetVector<Value *>> InSets;
-  DenseMap<Instruction *, SetVector<Value *>> OutSets;
 
   SetVector<Value *> setUnion(const SetVector<Value *> &LHS,
                               const SetVector<Value *> &RHS) {
