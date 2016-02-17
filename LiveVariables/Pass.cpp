@@ -247,13 +247,16 @@ public:
 
   void print(raw_ostream &O, const Module *M) const override {
     for (auto &BB : CurrentFunction->getBasicBlockList()) {
-      O << "BB: ";
+      O << "  BasicBlock: ";
       BB.printAsOperand(O, false, M);
       O << '\n';
       for (auto &I : BB.getInstList()) {
+        O << "    ";
         printSet(O, OutSets.lookup(&I));
+        O << "  ";
         I.dump();
       }
+      O << "    ";
       printSet(O, InSets.lookup(&BB));
     }
   }
