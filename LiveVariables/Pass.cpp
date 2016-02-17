@@ -45,6 +45,7 @@ public:
   }
   void visitInvokeInst(InvokeInst &I) {
     addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitResumeInst(ResumeInst &I) {
     addOperandsToGen(I);
@@ -57,7 +58,6 @@ public:
     addOperandsToGen(I);
   }
   void visitUnreachableInst(UnreachableInst &I) {
-    addOperandsToGen(I);
   }
 
   /* Binary Operations */
@@ -68,16 +68,26 @@ public:
 
   /* Vector Operations */
   void visitExtractElementInst(ExtractElementInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitInsertElementInst(InsertElementInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitShuffleVectorInst(ShuffleVectorInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
 
   /* Aggregate Operations */
   void visitExtractValueInst(ExtractValueInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitInsertValueInst(InsertValueInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
 
   /* Memory Access and Addressing Operations */
@@ -85,8 +95,12 @@ public:
     addResultToKill(I);
   }
   void visitAtomicCmpXchgInst(AtomicCmpXchgInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitAtomicRMWInst(AtomicRMWInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitFenceInst(FenceInst &I) {
   }
@@ -162,18 +176,28 @@ public:
     addResultToKill(I);
   }
   void visitFCmpInst(FCmpInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitICmpInst(ICmpInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitLandingPadInst(LandingPadInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitPHINode(PHINode &I) {
     addOperandsToGen(I);
     addResultToKill(I);
   }
   void visitSelectInst(SelectInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitVAArgInst(VAArgInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
 };
 
