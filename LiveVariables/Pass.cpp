@@ -12,10 +12,11 @@ using namespace llvm;
 
 namespace {
 
-struct AssignSetsVisitor : public InstVisitor<AssignSetsVisitor> {
-  DenseMap<Instruction *, SetVector<Value *>> GenSets;
-  DenseMap<Instruction *, SetVector<Value *>> KillSets;
+class AssignSetsVisitor : public InstVisitor<AssignSetsVisitor> {
 
+  void addResultToKill(Instruction &I) {
+    KillSets[&I].insert(&I);
+  }
   void addOperandsToGen(Instruction &I) {
     for (const auto &Op : I.operands()) {
       Value *V = Op.get();
@@ -24,31 +25,123 @@ struct AssignSetsVisitor : public InstVisitor<AssignSetsVisitor> {
     }
   }
 
-  void visitAllocaInst(AllocaInst &I) {
-    KillSets[&I].insert(&I);
-  }
-  void visitBinaryOperator(BinaryOperator &I) {
-    KillSets[&I].insert(&I);
+public:
+  DenseMap<Instruction *, SetVector<Value *>> GenSets;
+  DenseMap<Instruction *, SetVector<Value *>> KillSets;
+
+  /* Terminator Instructions */
+  void visitBranchInst(BranchInst &I) {
     addOperandsToGen(I);
   }
-  void visitCallInst(CallInst &I) {
-    KillSets[&I].insert(&I);
+  void visitIndirectBrInst(IndirectBrInst &I) {
     addOperandsToGen(I);
   }
-  void visitGetElementPtrInst(GetElementPtrInst &I) {
-    KillSets[&I].insert(&I);
-    GenSets[&I].insert(I.getPointerOperand());
+  void visitInvokeInst(InvokeInst &I) {
+    addOperandsToGen(I);
   }
-  void visitLoadInst(LoadInst &I) {
-    KillSets[&I].insert(&I);
-    GenSets[&I].insert(I.getPointerOperand());
+  void visitResumeInst(ResumeInst &I) {
+    addOperandsToGen(I);
   }
   void visitReturnInst(ReturnInst &I) {
     addOperandsToGen(I);
+    addResultToKill(I);
+  }
+  void visitSwitchInst(SwitchInst &I) {
+    addOperandsToGen(I);
+  }
+  void visitUnreachableInst(UnreachableInst &I) {
+    addOperandsToGen(I);
+  }
+
+  /* Binary Operations */
+  void visitBinaryOperator(BinaryOperator &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
+  }
+
+  /* Vector Operations */
+  void visitExtractElementInst(ExtractElementInst &I) {
+  }
+  void visitInsertElementInst(InsertElementInst &I) {
+  }
+  void visitShuffleVectorInst(ShuffleVectorInst &I) {
+  }
+
+  /* Aggregate Operations */
+  void visitExtractValueInst(ExtractValueInst &I) {
+  }
+  void visitInsertValueInst(InsertValueInst &I) {
+  }
+
+  /* Memory Access and Addressing Operations */
+  void visitAllocaInst(AllocaInst &I) {
+    addResultToKill(I);
+  }
+  void visitAtomicCmpXchgInst(AtomicCmpXchgInst &I) {
+  }
+  void visitAtomicRMWInst(AtomicRMWInst &I) {
+  }
+  void visitFenceInst(FenceInst &I) {
+  }
+  void visitGetElementPtrInst(GetElementPtrInst &I) {
+    GenSets[&I].insert(I.getPointerOperand());
+    addResultToKill(I);
+  }
+  void visitLoadInst(LoadInst &I) {
+    GenSets[&I].insert(I.getPointerOperand());
+    addResultToKill(I);
   }
   void visitStoreInst(StoreInst &I) {
     GenSets[&I].insert(I.getPointerOperand());
     GenSets[&I].insert(I.getValueOperand());
+  }
+
+  /* Conversion Operations */
+  void visitAddrSpaceCastInst(AddrSpaceCastInst &I) {
+  }
+  void visitBitCastInst(BitCastInst &I) {
+  }
+  void visitFPExtInst(FPExtInst &I) {
+  }
+  void visitFPToSIInst(FPToSIInst &I) {
+  }
+  void visitFPToUIInst(FPToUIInst &I) {
+  }
+  void visitFPTruncInst(FPTruncInst &I) {
+  }
+  void visitIntToPtrInst(IntToPtrInst &I) {
+  }
+  void visitPtrToIntInst(PtrToIntInst &I) {
+  }
+  void visitSExtInst(SExtInst &I) {
+  }
+  void visitSIToFPInst(SIToFPInst &I) {
+  }
+  void visitTruncInst(TruncInst &I) {
+  }
+  void visitUIToFPInst(UIToFPInst &I) {
+  }
+  void visitZExtInst(ZExtInst &I) {
+  }
+
+  /* Other Operations */
+  void visitCallInst(CallInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
+  }
+  void visitFCmpInst(FCmpInst &I) {
+  }
+  void visitICmpInst(ICmpInst &I) {
+  }
+  void visitLandingPadInst(LandingPadInst &I) {
+  }
+  void visitPHINode(PHINode &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
+  }
+  void visitSelectInst(SelectInst &I) {
+  }
+  void visitVAArgInst(VAArgInst &I) {
   }
 };
 
