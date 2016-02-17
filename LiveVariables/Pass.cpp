@@ -14,6 +14,9 @@ namespace {
 
 class AssignSetsVisitor : public InstVisitor<AssignSetsVisitor> {
 
+  DenseMap<Instruction *, SetVector<Value *>> GenSets;
+  DenseMap<Instruction *, SetVector<Value *>> KillSets;
+
   void addResultToKill(Instruction &I) {
     KillSets[&I].insert(&I);
   }
@@ -26,8 +29,12 @@ class AssignSetsVisitor : public InstVisitor<AssignSetsVisitor> {
   }
 
 public:
-  DenseMap<Instruction *, SetVector<Value *>> GenSets;
-  DenseMap<Instruction *, SetVector<Value *>> KillSets;
+  const SetVector<Value *>& getGenSet(Instruction *I) {
+    return GenSets[I];
+  }
+  const SetVector<Value *>& getKillSet(Instruction *I) {
+    return KillSets[I];
+  }
 
   /* Terminator Instructions */
   void visitBranchInst(BranchInst &I) {
@@ -156,8 +163,8 @@ public:
   DenseMap<BasicBlock *, SetVector<Value *>> InSets;
   DenseMap<Instruction *, SetVector<Value *>> OutSets;
 
-  SetVector<Value *> setUnion(SetVector<Value *> &LHS,
-                              SetVector<Value *> &RHS) {
+  SetVector<Value *> setUnion(const SetVector<Value *> &LHS,
+                              const SetVector<Value *> &RHS) {
     SetVector<Value *> Result = LHS;
     for (auto V : RHS) {
       Result.insert(V);
@@ -167,8 +174,8 @@ public:
 
   void flow(Instruction *I, SetVector<Value *> &In, SetVector<Value *> &Out) {
     Out.clear();
-    Out = setUnion(In, Visitor.GenSets[I]);
-    for (auto V : Visitor.KillSets[I]) {
+    Out = setUnion(In, Visitor.getGenSet(I));
+    for (auto V : Visitor.getKillSet(I)) {
       Out.remove(V);
     }
   }
