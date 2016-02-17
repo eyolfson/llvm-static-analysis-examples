@@ -23,6 +23,7 @@ class GenKillVisitor : public InstVisitor<GenKillVisitor> {
     for (const auto &Op : I.operands()) {
       Value *V = Op.get();
       if (isa<Constant>(V)) { continue; }
+      else if (isa<BasicBlock>(V)) { continue; }
       GenSets[&I].insert(V);
     }
   }
@@ -90,44 +91,69 @@ public:
   void visitFenceInst(FenceInst &I) {
   }
   void visitGetElementPtrInst(GetElementPtrInst &I) {
-    GenSets[&I].insert(I.getPointerOperand());
+    addOperandsToGen(I);
     addResultToKill(I);
   }
   void visitLoadInst(LoadInst &I) {
-    GenSets[&I].insert(I.getPointerOperand());
+    addOperandsToGen(I);
     addResultToKill(I);
   }
   void visitStoreInst(StoreInst &I) {
-    GenSets[&I].insert(I.getPointerOperand());
-    GenSets[&I].insert(I.getValueOperand());
+    addOperandsToGen(I);
   }
 
   /* Conversion Operations */
   void visitAddrSpaceCastInst(AddrSpaceCastInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitBitCastInst(BitCastInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitFPExtInst(FPExtInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitFPToSIInst(FPToSIInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitFPToUIInst(FPToUIInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitFPTruncInst(FPTruncInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitIntToPtrInst(IntToPtrInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitPtrToIntInst(PtrToIntInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitSExtInst(SExtInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitSIToFPInst(SIToFPInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitTruncInst(TruncInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitUIToFPInst(UIToFPInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
   void visitZExtInst(ZExtInst &I) {
+    addOperandsToGen(I);
+    addResultToKill(I);
   }
 
   /* Other Operations */
@@ -181,14 +207,14 @@ public:
 
   bool computeOutSets(BasicBlock &BB) {
     SetVector<Value *> newIn;
-    for (pred_iterator PI = pred_begin(&BB), PIE = pred_end(&BB); PI != PIE; ++PI) {
-      BasicBlock *Pred = *PI;
-      Instruction *T = Pred->getTerminator();
-      assert(T && "Basic Block has invalid terminator");
-      if (OutSets.count(T) == 0) {
+    for (succ_iterator SI = succ_begin(&BB), SIE = succ_end(&BB); SI != SIE; ++SI) {
+      BasicBlock *Succ = *SI;
+      Instruction *I = &Succ->getInstList().front();
+      assert(I && "Basic Block has invalid terminator");
+      if (OutSets.count(I) == 0) {
         continue;
       }
-      for (auto V : OutSets[T]) {
+      for (auto V : OutSets[I]) {
         newIn.insert(V);
       }
     }
