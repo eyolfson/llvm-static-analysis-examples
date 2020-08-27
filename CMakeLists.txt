@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 3.4.3)
+cmake_minimum_required(VERSION 3.13.4)
+
+project(LLVM_STATIC_ANALYSIS_EXAMPLES
+   LANGUAGES CXX)
 
 find_package(LLVM REQUIRED CONFIG)
 
